@@ -346,6 +346,39 @@ class PageTranslator {
       });
     }
 
+    // Helper method to convert blob to base64
+    blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Failed to convert blob to base64'));
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async getImageData(img) {
+      try {
+        let response;
+        if (img.src.startsWith('blob:')) {
+          response = await fetch(img.src);
+        } else {
+          // For regular URLs, fetch with cache to avoid re-downloading
+          response = await fetch(img.src, { cache: 'force-cache' });
+        }
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.status}`);
+        }
+        
+        const blob = await response.blob();
+        return this.blobToBase64(blob);
+      } catch (error) {
+        console.error('Failed to process image:', error);
+        console.error('Image source:', img.src);
+        throw error;
+      }
+    }
+
     async translateImageText() {
         const sourceLanguage = this.getPageLanguage();
         
@@ -361,11 +394,20 @@ class PageTranslator {
             !img.hasAttribute('data-has-translation') &&
             !img.closest('.translation-overlay'));
 
-        const batchSize = 10;
+        // Process all images in parallel with larger batches
+        const batchSize = 30;
+        const batches = [];
+        
         for (let i = 0; i < images.length; i += batchSize) {
-          const batch = images.slice(i, i + batchSize);
-          await Promise.all(batch.map(img => this.processImage(img)));
+          batches.push(images.slice(i, i + batchSize));
         }
+
+        // Process batches in parallel
+        await Promise.all(
+          batches.map(batch => 
+            Promise.all(batch.map(img => this.processImage(img)))
+          )
+        );
         
         const observer = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
@@ -537,28 +579,6 @@ class PageTranslator {
         hash = hash & hash;
       }
       return Math.abs(hash).toString(36);
-    }
-
-    async getImageData(img) {
-      // For blob URLs, we need to convert to base64
-      if (img.src.startsWith('blob:')) {
-        try {
-          const response = await fetch(img.src);
-          const blob = await response.blob();
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = () => reject(new Error('Failed to process blob image'));
-            reader.readAsDataURL(blob);
-          });
-        } catch (error) {
-          console.error('Failed to process blob URL:', error);
-          throw error;
-        }
-      }
-      
-      // For regular URLs, just return the URL directly
-      return img.src;
     }
   
     restoreOriginalContent() {
