@@ -357,25 +357,30 @@ class PageTranslator {
     }
 
     async getImageData(img) {
-      try {
-        let response;
-        if (img.src.startsWith('blob:')) {
-          response = await fetch(img.src);
-        } else {
-          // For regular URLs, fetch with cache to avoid re-downloading
-          response = await fetch(img.src, { cache: 'force-cache' });
+      // For blob URLs, always convert to base64
+      if (img.src.startsWith('blob:')) {
+        try {
+          const response = await fetch(img.src);
+          const blob = await response.blob();
+          return this.blobToBase64(blob);
+        } catch (error) {
+          console.error('Failed to process blob URL:', error);
+          throw error;
         }
-        
+      }
+      
+      // For regular URLs, try base64 first but fall back to URL
+      try {
+        const response = await fetch(img.src, { cache: 'force-cache' });
         if (!response.ok) {
           throw new Error(`Failed to fetch image: ${response.status}`);
         }
-        
         const blob = await response.blob();
         return this.blobToBase64(blob);
       } catch (error) {
-        console.error('Failed to process image:', error);
-        console.error('Image source:', img.src);
-        throw error;
+        console.log('Base64 conversion failed, falling back to URL:', error);
+        console.log('Using direct URL for:', img.src);
+        return img.src;  // Fall back to direct URL
       }
     }
 
