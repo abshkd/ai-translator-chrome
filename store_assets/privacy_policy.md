@@ -1,6 +1,6 @@
 # Privacy Policy for AI Page Translator
 
-*Last updated: February 23, 2024*
+*Last updated: February 23, 2025*
 
 ## Introduction
 
@@ -62,7 +62,7 @@ This privacy policy may be updated. Changes will be reflected in the Chrome Web 
 
 For privacy concerns or questions:
 - Visit: https://airith.com
-- Email: [Contact Email]
+- Email: queries@airith.com
 
 ## Compliance
 
