@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
@@ -19,7 +19,9 @@ jobs:
         cache: 'npm'
     
     - name: Install dependencies
-      run: npm ci
+      run: |
+        npm install
+        npm ci
     
     - name: Build extension
       run: npm run build
@@ -28,7 +30,7 @@ jobs:
     
     - name: Create extension package
       run: |
-        powershell Compress-Archive -Path manifest.json, LICENSE, README.md, popup.html, options.html, dist/*, icons/* -DestinationPath extension.zip -Force
+        zip -r extension.zip manifest.json LICENSE README.md popup.html popup.js options.html dist/* icons/*
     
     - name: Generate release notes
       run: |
