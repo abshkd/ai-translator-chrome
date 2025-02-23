@@ -13,12 +13,18 @@
     "permissions": [
       "activeTab",
       "scripting",
-      "storage"
+      "storage",
+      "privateNetworkAccess"
     ],
     "minimum_chrome_version": "88",
     "host_permissions": [
       "https://openrouter.ai/*",
-      "https://api.airith.com/*"
+      "https://api.airith.com/*",
+      "http://192.168.*/*",
+      "http://10.*/*",
+      "http://172.16.*/*",
+      "http://127.0.0.1/*",
+      "http://localhost/*"
     ],
     "content_security_policy": {
       "extension_pages": "script-src 'self'; object-src 'self'"
