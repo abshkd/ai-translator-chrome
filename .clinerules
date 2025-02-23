@@ -1,9 +1,0 @@
-# Security
-
-## Sensitive Files
-
-DO NOT read or modify:
-
--   .env files
--   implementation.js
--   popup.js

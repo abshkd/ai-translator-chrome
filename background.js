@@ -28,6 +28,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
   });
 
+  const DEFAULT_TEXT_MODEL = 'google/gemini-2.0-flash-001';
+  const DEFAULT_IMAGE_MODEL = 'google/gemini-flash-1.5-8b';
+
   // Cache for API settings
   let apiSettings = null;
 
@@ -38,7 +41,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     return new Promise((resolve, reject) => {
-      chrome.storage.sync.get(['apiKey', 'apiEndpoint'], (result) => {
+      chrome.storage.sync.get(['apiKey', 'apiEndpoint', 'textModel', 'imageModel'], (result) => {
         if (chrome.runtime.lastError) {
           reject(new Error('Failed to load API settings'));
           return;
@@ -49,8 +52,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
-        apiSettings = result;
-        resolve(result);
+        apiSettings = {
+          apiKey: result.apiKey,
+          apiEndpoint: result.apiEndpoint,
+          textModel: result.textModel || DEFAULT_TEXT_MODEL,
+          imageModel: result.imageModel || DEFAULT_IMAGE_MODEL
+        };
+        resolve(apiSettings);
       });
     });
   }
@@ -75,7 +83,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           'X-Title': 'AI Web Assistant'
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-001',
+          model: settings.textModel,
           messages: [
             {
               role: 'system',
@@ -117,7 +125,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           'X-Title': 'AI Web Assistant'
         },
         body: JSON.stringify({
-          model: 'google/gemini-flash-1.5-8b',
+          model: settings.imageModel,
           messages: [
             {
               role: 'user',
