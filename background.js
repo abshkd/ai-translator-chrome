@@ -137,10 +137,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         If there is no text in the image return empty string. 
                         Return only the translated text if available without any explanation.`
                 },
-                {
-                  type: 'image_url',
-                  image_url: imageData
-                }
+                imageData.startsWith('data:') ? 
+                  { type: 'image_url', image_url: imageData } :
+                  { type: 'image_url', image_url: imageData }
               ]
             }
           ]

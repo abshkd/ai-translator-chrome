@@ -8,14 +8,14 @@ class PageTranslator {
         this.translationCache = new Map();
         this.isProcessingTranslation = false;
         this.lastTranslationTime = 0;
-        this.minimumTranslationInterval = 250;
+        this.minimumTranslationInterval = 0;
         
         // Request throttling
         this.requestCount = 0;
-        this.maxRequestsPerMinute = 300;
+        this.maxRequestsPerMinute = 2000;
         this.requestResetTime = Date.now();
-        this.backoffDelay = 250;
-        this.maxBackoffDelay = 1000;
+        this.backoffDelay = 50;
+        this.maxBackoffDelay = 200;
         this.isInCooldown = false;
         this.cooldownTimer = null;
         this.lastResetTime = Date.now();
@@ -361,14 +361,10 @@ class PageTranslator {
             !img.hasAttribute('data-has-translation') &&
             !img.closest('.translation-overlay'));
 
-        const batchSize = 3;
+        const batchSize = 10;
         for (let i = 0; i < images.length; i += batchSize) {
           const batch = images.slice(i, i + batchSize);
           await Promise.all(batch.map(img => this.processImage(img)));
-          
-          if (i + batchSize < images.length) {
-            await new Promise(resolve => setTimeout(resolve, 300));
-          }
         }
         
         const observer = new IntersectionObserver((entries) => {
@@ -401,7 +397,7 @@ class PageTranslator {
                   return;
                 }
                 img.setAttribute('data-has-translation', 'true');
-                this.translationCache.set(translationKey, true);
+                this.translationCache.set(translationKey, result.translatedText);
 
                 const computedStyle = window.getComputedStyle(img);
                 const originalDisplay = computedStyle.display;
@@ -465,7 +461,7 @@ class PageTranslator {
                   color: white;
                   white-space: pre-line;
                   pointer-events: none;
-                  font-size: ${Math.max(12, Math.min(img.height / 20, 16))}px;
+                  font-size: ${Math.max(14, Math.min(img.width / 40, img.height / 15, 24))}px;
                   line-height: 1.4;
                   text-align: left;
                 `;
@@ -475,7 +471,8 @@ class PageTranslator {
                 this.originalTexts.set(overlay, '');
             }
         } catch (error) {
-            // Silently handle image processing errors
+            console.error('Image processing error:', error);
+            console.error('Failed image:', img.src);
         }
     }
 
@@ -523,20 +520,13 @@ class PageTranslator {
       }
 
       this.isInCooldown = true;
+      
+      // Simple cooldown: just wait a short time and reset
       this.cooldownTimer = setTimeout(() => {
         this.isInCooldown = false;
-        this.requestCount = Math.max(0, this.requestCount - 50); // More aggressive reduction
-        this.backoffDelay = Math.min(this.backoffDelay * 1.1, this.maxBackoffDelay); // Gentler backoff increase
-      }, this.backoffDelay);
-
-      // Add a recovery timer to ensure we don't stay in cooldown too long
-      setTimeout(() => {
-        if (this.isInCooldown) {
-          this.isInCooldown = false;
-          this.backoffDelay = 250; // Reset backoff
-          this.requestCount = Math.floor(this.maxRequestsPerMinute * 0.7); // Set to 70% of max
-        }
-      }, 5000); // Force recovery after 5 seconds
+        this.requestCount = Math.floor(this.maxRequestsPerMinute * 0.2); // Reset to 20% of max
+        this.backoffDelay = 50; // Reset to initial backoff
+      }, 1000); // Very short cooldown
     }
 
     hashCode(str) {
@@ -550,51 +540,25 @@ class PageTranslator {
     }
 
     async getImageData(img) {
-      return new Promise(async (resolve, reject) => {
+      // For blob URLs, we need to convert to base64
+      if (img.src.startsWith('blob:')) {
         try {
-          // Check if URL is a blob URL
-          if (img.src.startsWith('blob:')) {
-            // Fetch the blob data
-            const response = await fetch(img.src);
-            const blob = await response.blob();
-            
-            // Convert blob to data URL
+          const response = await fetch(img.src);
+          const blob = await response.blob();
+          return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            reader.onloadend = () => {
-              const base64data = reader.result;
-              resolve(base64data);
-            };
+            reader.onloadend = () => resolve(reader.result);
             reader.onerror = () => reject(new Error('Failed to process blob image'));
             reader.readAsDataURL(blob);
-          } else {
-            // Original behavior for non-blob URLs
-            const newImg = new Image();
-            newImg.crossOrigin = "anonymous";
-            
-            newImg.onload = () => {
-              try {
-                const canvas = document.createElement('canvas');
-                canvas.width = newImg.width;
-                canvas.height = newImg.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(newImg, 0, 0);
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
-              } catch (error) {
-                reject(new Error('Failed to process image'));
-              }
-            };
-        
-            newImg.onerror = () => reject(new Error('Failed to load image'));
-        
-            const cacheBuster = Date.now();
-            newImg.src = img.src.includes('?') ? 
-              `${img.src}&_cb=${cacheBuster}` : 
-              `${img.src}?_cb=${cacheBuster}`;
-          }
+          });
         } catch (error) {
-          reject(error);
+          console.error('Failed to process blob URL:', error);
+          throw error;
         }
-      });
+      }
+      
+      // For regular URLs, just return the URL directly
+      return img.src;
     }
   
     restoreOriginalContent() {
