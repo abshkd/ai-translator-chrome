@@ -10,22 +10,26 @@
         "url": "git+https://github.com/abshkd/ai-translator-chrome.git"
     },
     "scripts": {
-      "build": "npm run build:popup && npm run build:content && npm run build:background",
+      "build": "npm run build:css && npm run build:popup && npm run build:content && npm run build:background",
+      "build:css": "npx tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
       "build:popup": "esbuild popup.jsx --bundle --minify --outfile=popup.js --target=chrome88",
-      "build:content": "esbuild content.js --bundle --minify --outfile=dist/content.js --target=chrome88",
-      "build:background": "esbuild background.js --bundle --minify --outfile=dist/background.js --target=chrome88",
-      "dev": "esbuild popup.jsx --bundle --watch --outfile=popup.js --target=chrome88",
-      "package": "npm run build && zip -r extension.zip . -x \"node_modules/*\" \"src/*\" \".git/*\" \"package-lock.json\" \"README.md\" \"LICENSE\"",
-      "test": "echo \"Error: no test specified\" && exit 1"
+        "build:content": "esbuild content.js --bundle --minify --outfile=dist/content.js --target=chrome88",
+        "build:background": "esbuild background.js --bundle --minify --outfile=dist/background.js --target=chrome88",
+        "dev": "esbuild popup.jsx --bundle --watch --outfile=popup.js --target=chrome88",
+        "package": "npm run build && zip -r extension.zip . -x \"node_modules/*\" \"src/*\" \".git/*\" \"package-lock.json\" \"README.md\" \"LICENSE\"",
+        "test": "echo \"Error: no test specified\" && exit 1"
     },
     "devDependencies": {
-      "esbuild": "^0.19.0",
-      "eslint": "^8.56.0",
-      "eslint-plugin-react": "^7.33.2",
-      "prettier": "^3.2.5"
+        "autoprefixer": "^10.4.20",
+        "esbuild": "^0.19.0",
+        "eslint": "^8.56.0",
+        "eslint-plugin-react": "^7.33.2",
+        "postcss": "^8.4.35",
+        "prettier": "^3.2.5",
+        "tailwindcss": "^3.4.1"
     },
     "dependencies": {
-      "react": "^18.2.0",
-      "react-dom": "^18.2.0"
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     }
-  }
+}
