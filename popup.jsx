@@ -117,6 +117,15 @@ const PopupUI = () => {
       >
         {isTranslating ? 'Translating...' : 'Start Translation'}
       </button>
+
+      <div className="mt-4 text-center">
+        <button 
+          onClick={() => chrome.runtime.openOptionsPage()}
+          className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          ⚙️ Settings
+        </button>
+      </div>
     </div>
   );
 };

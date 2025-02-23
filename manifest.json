@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "AI Page Translator",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Instantly translate web pages and images using AI, with support for multiple languages",
     "author": "Airith Pte Ltd",
     "homepage_url": "https://airith.com",
