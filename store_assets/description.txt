@@ -1,0 +1,29 @@
+AI Page Translator by Airith Pte Ltd
+
+Instantly translate web pages and images using advanced AI technology. This extension provides real-time translation of both text and images while preserving the original page layout.
+
+FEATURES:
+✓ Real-time text translation powered by AI
+✓ Image text detection and translation
+✓ Automatic language detection
+✓ Multiple language support
+✓ Smart rate limiting and caching
+✓ Preserves original page layout
+✓ Image text overlay translations
+✓ Customizable settings
+
+Perfect for:
+• Reading foreign language websites
+• Understanding text in images
+• International research
+• Learning new languages
+• Cross-cultural communication
+
+Privacy & Security:
+• No data collection
+• Secure API communication
+• Local caching for performance
+• No tracking or analytics
+
+This extension is developed and maintained by Airith Pte Ltd.
+For commercial licensing and support, visit: https://airith.com
