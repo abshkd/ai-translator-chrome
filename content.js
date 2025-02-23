@@ -7,8 +7,6 @@ class PageTranslator {
         this.originalTexts = new Map();
         this.translationCache = new Map();
         this.isProcessingTranslation = false;
-        this.lastTranslationTime = 0;
-        this.minimumTranslationInterval = 0;
         
         // Request throttling
         this.requestCount = 0;
@@ -87,7 +85,7 @@ class PageTranslator {
     setupMutationObserver() {
       let pendingNodes = new Set();
       let debounceTimer = null;
-      const debounceDelay = 2000;
+      const debounceDelay = 100; // Reduced from 2000ms to 100ms
       const maxBatchSize = 100;
 
       const processNode = (node) => {
@@ -225,8 +223,6 @@ class PageTranslator {
       if (this.isInCooldown && this.requestCount >= this.maxRequestsPerMinute) {
         return;
       }
-
-      if (now - this.lastTranslationTime < this.minimumTranslationInterval) return;
 
       const sourceLanguage = this.getPageLanguage();
       if (sourceLanguage === null) return;

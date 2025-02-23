@@ -34,21 +34,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Cache for API settings
   let apiSettings = null;
 
-  // Function to get API settings
-  async function getApiSettings() {
-    if (apiSettings) {
-      return apiSettings;
-    }
-
+  // Pre-fetch API settings on startup
+  function initializeApiSettings() {
     return new Promise((resolve, reject) => {
       chrome.storage.sync.get(['apiKey', 'apiEndpoint', 'textModel', 'imageModel'], (result) => {
         if (chrome.runtime.lastError) {
-          reject(new Error('Failed to load API settings'));
+          console.error('Failed to load API settings:', chrome.runtime.lastError);
           return;
         }
 
         if (!result.apiKey || !result.apiEndpoint) {
-          reject(new Error('API settings not configured. Please visit extension options to set up your API key and endpoint.'));
+          console.error('API settings not configured');
           return;
         }
 
@@ -63,10 +59,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
   }
 
-  // Clear cached settings when extension updates
-  chrome.runtime.onInstalled.addListener(() => {
-    apiSettings = null;
+  // Initialize settings on startup
+  initializeApiSettings();
+
+  // Watch for settings changes
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync') {
+      if (changes.apiKey || changes.apiEndpoint || changes.textModel || changes.imageModel) {
+        initializeApiSettings();
+      }
+    }
   });
+
+  // Function to get API settings
+  async function getApiSettings() {
+    if (apiSettings) {
+      return apiSettings;
+    }
+    return initializeApiSettings();
+  }
 
   async function handleTranslation(text, targetLang) {
     console.log('Making OpenRouter request');
