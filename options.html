@@ -66,7 +66,20 @@
             <input type="text" id="apiEndpoint" required>
             <small>Example: https://openrouter.ai/api/v1/chat/completions</small>
         </div>
-        <button type="submit">Save Settings</button>
+        <div class="form-group">
+            <label for="textModel">Text Translation Model:</label>
+            <input type="text" id="textModel" placeholder="google/gemini-2.0-flash-001">
+            <small>Leave empty to use default: google/gemini-2.0-flash-001</small>
+        </div>
+        <div class="form-group">
+            <label for="imageModel">Image Translation Model:</label>
+            <input type="text" id="imageModel" placeholder="google/gemini-flash-1.5-8b">
+            <small>Leave empty to use default: google/gemini-flash-1.5-8b</small>
+        </div>
+        <div class="form-group">
+            <button type="submit">Save Settings</button>
+            <button type="button" id="restoreDefaults" style="background-color: #666; margin-left: 10px;">Restore Default Models</button>
+        </div>
     </form>
     <div id="status" style="display: none;"></div>
     <script src="options.js"></script>

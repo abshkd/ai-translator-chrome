@@ -550,29 +550,50 @@ class PageTranslator {
     }
 
     async getImageData(img) {
-      return new Promise((resolve, reject) => {
-        const newImg = new Image();
-        newImg.crossOrigin = "anonymous";
+      return new Promise(async (resolve, reject) => {
+        try {
+          // Check if URL is a blob URL
+          if (img.src.startsWith('blob:')) {
+            // Fetch the blob data
+            const response = await fetch(img.src);
+            const blob = await response.blob();
+            
+            // Convert blob to data URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64data = reader.result;
+              resolve(base64data);
+            };
+            reader.onerror = () => reject(new Error('Failed to process blob image'));
+            reader.readAsDataURL(blob);
+          } else {
+            // Original behavior for non-blob URLs
+            const newImg = new Image();
+            newImg.crossOrigin = "anonymous";
+            
+            newImg.onload = () => {
+              try {
+                const canvas = document.createElement('canvas');
+                canvas.width = newImg.width;
+                canvas.height = newImg.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(newImg, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
+              } catch (error) {
+                reject(new Error('Failed to process image'));
+              }
+            };
         
-        newImg.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            canvas.width = newImg.width;
-            canvas.height = newImg.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(newImg, 0, 0);
-            resolve(canvas.toDataURL('image/jpeg', 0.8));
-          } catch (error) {
-            reject(new Error('Failed to process image'));
+            newImg.onerror = () => reject(new Error('Failed to load image'));
+        
+            const cacheBuster = Date.now();
+            newImg.src = img.src.includes('?') ? 
+              `${img.src}&_cb=${cacheBuster}` : 
+              `${img.src}?_cb=${cacheBuster}`;
           }
-        };
-  
-        newImg.onerror = () => reject(new Error('Failed to load image'));
-  
-        const cacheBuster = Date.now();
-        newImg.src = img.src.includes('?') ? 
-          `${img.src}&_cb=${cacheBuster}` : 
-          `${img.src}?_cb=${cacheBuster}`;
+        } catch (error) {
+          reject(error);
+        }
       });
     }
   
